@@ -1,0 +1,92 @@
+---
+title: "nkelley_OriginalHomeworkCode_05"
+output: html_document
+---
+
+```{r load}
+install.packages("tidyverse")
+library(tidyverse)
+library(curl)
+```
+```{r loadII}
+install.packages("ggplot2")
+library(ggplot2)
+```
+```{r loadIII}
+install.packages("gridExtra")
+install.packages("lmodel2")
+```
+ 
+[1] Using the “KamilarAndCooperData.csv” dataset, run a linear regression looking at log(HomeRange_km2) in relation to log(Body_mass_female_mean) and report your β
+ coeffiecients (slope and intercept).
+ 
+```{r load data}
+f <- curl("https://raw.githubusercontent.com/fuzzyatelin/fuzzyatelin.github.io/master/AN588_Fall21/KamilarAndCooperData.csv")
+c <- read.csv(f, header = TRUE, sep = ",", stringsAsFactors = FALSE)
+#creates data frame from raw csv file
+d <- na.omit(c)
+summary(d)
+```
+
+```{r linear regression}
+x <- log(d$Body_mass_female_mean)
+y <- log(d$HomeRange_km2)
+m <- lm(x~y, data = d)
+summary(m)
+```
+
+```{r ggplot regression}
+g <- ggplot(data = d, aes(x = x, y = y))
+g <- g + geom_point()
+g <- g + geom_smooth(method = "lm", formula = y ~ x)
+g
+```
+
+```{r beta coefficients}
+t <- coef(summary(m))
+t <- data.frame(unlist(t))
+colnames(t) <- c("Est", "SE", "t", "p")
+t
+
+#beta0 (y-intercept):
+beta0 <- t$Est[1]
+
+#beta1 (slope):
+beta1 <- t$Est[2]
+```
+
+[2] Then, use bootstrapping to sample from your data 1000 times with replacement, each time fitting the same model and calculating the same coefficients. This generates a sampling distribution for each β coefficient.
+
+```{r bootstrap}
+b <- NULL
+n <- 30
+for(i in 1:1000) {
+  sample <- sample(d, size = n, replace = T, prob = NULL)
+  m <- lm(x~y, sample)
+  t <- coef(summary(m))
+  t <- data.frame(unlist(t))
+  colnames(t) <- c("Est", "SE", "t", "p")
+  b0 <- (t$Est[1])
+  b1 <- (t$Est[2])
+  b[i] <- data_frame(c(b0, b1))
+}
+b
+```
+**I believe something is going wrong with my sampling, because it's generating the same b0, b1 every time.
+
+Estimate the standard error for each of your β
+ coefficients as the standard deviation of the sampling distribution from your bootstrap and determine the 95% CI for each of your β
+ coefficients based on the appropriate quantiles from your sampling distribution.
+
+```{r standard error}
+sd(b$b0)
+sd(b$b1)
+```
+
+```{r 95% CI}
+
+#how do I know the appropriate quantiles?
+```
+How does the former compare to the SE estimated from your entire dataset using the formula for standard error implemented in lm()?
+
+How does the latter compare to the 95% CI estimated from your entire dataset?
