@@ -2,11 +2,15 @@
 title: "nkelley_OriginalHomeworkCode_05"
 output: html_document
 ---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
 
 ```{r load}
 install.packages("tidyverse")
 library(tidyverse)
 library(curl)
+library(dplyr)
 ```
 ```{r loadII}
 install.packages("ggplot2")
@@ -16,15 +20,21 @@ library(ggplot2)
 install.packages("gridExtra")
 install.packages("lmodel2")
 ```
- 
+```{r loadIV}
+install.packages("sciplot")
+library(sciplot)
+```
+
 [1] Using the “KamilarAndCooperData.csv” dataset, run a linear regression looking at log(HomeRange_km2) in relation to log(Body_mass_female_mean) and report your β
  coeffiecients (slope and intercept).
  
 ```{r load data}
 f <- curl("https://raw.githubusercontent.com/fuzzyatelin/fuzzyatelin.github.io/master/AN588_Fall21/KamilarAndCooperData.csv")
 c <- read.csv(f, header = TRUE, sep = ",", stringsAsFactors = FALSE)
+colnames(c)
 #creates data frame from raw csv file
-d <- na.omit(c)
+d <- select(c, Body_mass_female_mean, HomeRange_km2)
+d <- na.omit(d)
 summary(d)
 ```
 
@@ -58,20 +68,23 @@ beta1 <- t$Est[2]
 [2] Then, use bootstrapping to sample from your data 1000 times with replacement, each time fitting the same model and calculating the same coefficients. This generates a sampling distribution for each β coefficient.
 
 ```{r bootstrap}
-b <- NULL
-n <- 30
+
+b0 <- NULL
+b1 <- NULL
 for(i in 1:1000) {
-  sample <- sample(d, size = n, replace = T, prob = NULL)
-  m <- lm(x~y, sample)
-  t <- coef(summary(m))
-  t <- data.frame(unlist(t))
-  colnames(t) <- c("Est", "SE", "t", "p")
-  b0 <- (t$Est[1])
-  b1 <- (t$Est[2])
-  b[i] <- data_frame(c(b0, b1))
+  sample_d = d[sample(1:nrow(d), nrow(d), replace = TRUE), ]
+  
+  d_bootstrap <- lm(log(d$HomeRange_km2) ~ log(d$Body_mass_female_mean), data = sample_d)
+  
+  b0 <- c(b0, d_bootstrap$coefficients[1])
+  
+  b1 <- c(b1, d_bootstrap$coefficients[2])
 }
-b
+b0
+b1
+
 ```
+
 **I believe something is going wrong with my sampling, because it's generating the same b0, b1 every time.
 
 Estimate the standard error for each of your β
@@ -79,14 +92,35 @@ Estimate the standard error for each of your β
  coefficients based on the appropriate quantiles from your sampling distribution.
 
 ```{r standard error}
-sd(b$b0)
-sd(b$b1)
+mean_b0 <- mean(b0)
+mean_b0
+mean_b1 <- mean(b1)
+mean_b1
+
+sd_b0 <- sd(b0)
+sd_b0
+sd_b1 <- sd(b1)
+sd_b1
+
+se_b0 <- se(b0)
+se_b0
+se_b1 <- se(b1)
+se_b1
 ```
 
 ```{r 95% CI}
+upper <- mean(b0) + qnorm(0.975, mean = 0, sd = 1) * se(b0)
+lower <- mean(b0) + qnorm(0.025, mean = 0, sd = 1) * se(b0)  
+ci_b0 <- c(lower, upper)
+ci_b0
 
-#how do I know the appropriate quantiles?
+upper <- mean(b1) + qnorm(0.975, mean = 0, sd = 1) * se(b1)
+lower <- mean(b1) + qnorm(0.025, mean = 0, sd = 1) * se(b1)  
+ci_b1 <- c(lower, upper)
+ci_b1
 ```
 How does the former compare to the SE estimated from your entire dataset using the formula for standard error implemented in lm()?
+
+
 
 How does the latter compare to the 95% CI estimated from your entire dataset?
