@@ -1,0 +1,152 @@
+---
+title: "nkelley_FinalHomeworkCode_05"
+output: html_document
+---
+
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Begin by loading relevant packages. May need to install tidyverse, ggplot2, gridExtra, lmodel2, and sciplot. 
+```{r load}
+library(tidyverse)
+library(curl)
+library(dplyr)
+```
+```{r loadII}
+library(ggplot2)
+```
+```{r loadIV}
+library(sciplot)
+```
+
+[1] Using the “KamilarAndCooperData.csv” dataset, run a linear regression looking at log(HomeRange_km2) in relation to log(Body_mass_female_mean) and report your β
+ coeffiecients (slope and intercept).
+ 
+```{r load data}
+f <- curl("https://raw.githubusercontent.com/fuzzyatelin/fuzzyatelin.github.io/master/AN588_Fall21/KamilarAndCooperData.csv")
+c <- read.csv(f, header = TRUE, sep = ",", stringsAsFactors = FALSE)
+#creates data frame from raw csv file
+colnames(c)
+
+#next, I generate a linear regression for log(HomeRange_km2) in relation to log(Body_mass_female_mean) and summarize the results
+d <- lm(log(HomeRange_km2) ~ log(Body_mass_female_mean), data = c)
+summary(d)
+```
+
+```{r ggplot regression}
+#here we can view the results of the linear regression using ggplot
+x <- log(c$HomeRange_km2)
+y <- log(c$Body_mass_female_mean)
+g <- ggplot(data = c, aes(x = x, y = y))
+g <- g + geom_point()
+g <- g + geom_smooth(method = "lm", formula = y ~ x)
+g
+```
+
+```{r beta coefficients}
+t <- coef(summary(d))
+t <- data.frame(unlist(t))
+colnames(t) <- c("Est", "SE", "t", "p")
+t
+#beta0 (y-intercept):
+lmbeta0 <- t$Est[1]
+#beta1 (slope):
+lmbeta1 <- t$Est[2]
+
+lm_coeff <- data.frame(lmbeta0, lmbeta1)
+lm_coeff
+
+```
+
+[2] Then, use bootstrapping to sample from your data 1000 times with replacement, each time fitting the same model and calculating the same coefficients. This generates a sampling distribution for each β coefficient.
+
+```{r bootstrap}
+#begin by making containers for the coefficients
+bsb0 <- NULL
+bsb1 <- NULL
+
+#now set up the for loop
+for(i in 1:1000) {
+  #first, generate 1000 random samples from the data
+  sample_c = c[sample(1:nrow(c), nrow(c), replace = TRUE), ]
+  
+  #next, run linear regression on the samples
+  c_bootstrap <- lm(log(HomeRange_km2) ~ log(Body_mass_female_mean), data = sample_c)
+  
+  #extract the coefficients and save in the prepared containers
+  bsb0 <- c(bsb0, c_bootstrap$coefficients[1])
+  bsb1 <- c(bsb1, c_bootstrap$coefficients[2])
+}
+```
+
+Estimate the standard error for each of your β
+ coefficients as the standard deviation of the sampling distribution from your bootstrap and determine the 95% CI for each of your β
+ coefficients based on the appropriate quantiles from your sampling distribution.
+
+
+```{r standard error}
+#calculate the mean, standard deviation, and standard error of each bootstrapped coefficient (b0, b1) 
+mean_bsb0 <- mean(bsb0)
+mean_bsb1 <- mean(bsb1)
+sd_bsb0 <- sd(bsb0)
+sd_bsb1 <- sd(bsb1)
+se_bsb0 <- se(bsb0)
+se_bsb1 <- se(bsb1)
+
+#combine values into a list
+bs_mean <- c(mean_bsb0, mean_bsb1)
+bs_sd <- c(sd_bsb0, sd_bsb1)
+bs_error <- data.frame(se_bsb0, se_bsb1) 
+
+#these values will be incorporated into a data frame with CI in the next chunk...
+```
+
+```{r 95% CI}
+#next calculate CI for each bootstrapped coefficient:
+
+#CI for b0
+bsb0_upper <- mean(bsb0) + qnorm(0.975, mean = 0, sd = 1) * se(bsb0)
+bsb0_lower <- mean(bsb0) + qnorm(0.025, mean = 0, sd = 1) * se(bsb0)  
+ci_bsb0 <- c(bsb0_lower, bsb0_upper)
+ci_bsb0
+
+#CI for b1
+bsb1_upper <- mean(bsb1) + qnorm(0.975, mean = 0, sd = 1) * se(bsb1)
+bsb1_lower <- mean(bsb1) + qnorm(0.025, mean = 0, sd = 1) * se(bsb1)  
+ci_bsb1 <- c(bsb1_lower, bsb1_upper)
+ci_bsb1
+
+#this separates by lower and upper CI so they can be incorporated into a larger data frame continuing from the previous chunk
+bs_lowerCI <- c(bsb0_lower, bsb1_lower)
+bs_upperCI <- c(bsb0_upper, bsb1_upper)
+
+#organize all values into a data frame for readability
+bs_df <- data.frame(bs_mean, bs_sd, bs_error, bs_lowerCI, bs_upperCI)
+bs_df
+```
+
+How does the former compare to the SE estimated from your entire dataset using the formula for standard error implemented in lm()?
+```{r SE comparison}
+#linear regression error
+se_lmb0 <- t$SE[1]
+se_lmb1 <- t$SE[2]
+lm_error <- data.frame(se_lmb0, se_lmb1)
+lm_error
+
+#bootstrap error
+bs_error
+```
+The standard error calculated from the linear regression model is much greater than the standard error calculated using the bootstrapping method. 
+
+How does the latter compare to the 95% CI estimated from your entire dataset?
+```{r CI comparison}
+#linear regression CI
+ci_lm <- confint(d, level = 0.90)
+ci_lm
+#boostrap CI
+ci_bsb0
+ci_bsb1
+```
+The linear regression confidence intervals for b0 and b1 are larger than the bootstrapped confidence intervals, reflecting greater accuracy in the bootstrapped estimates than the linear regression estimates. 
