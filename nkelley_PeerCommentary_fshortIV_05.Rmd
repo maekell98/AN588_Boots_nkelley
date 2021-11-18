@@ -22,6 +22,8 @@ library(ggplot2)
 library(sciplot)
 ```
 
+<span style="color: red;">I had to remove the install packages pieces as it was making it so that I could not knit the code.</span>
+
 [1] Using the “KamilarAndCooperData.csv” dataset, run a linear regression looking at log(HomeRange_km2) in relation to log(Body_mass_female_mean) and report your β
  coeffiecients (slope and intercept).
  
