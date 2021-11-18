@@ -169,7 +169,7 @@ pre code {
 
 
 <hr />
-<p>Begin by loading relevant packages. May need to install tidyverse, ggplot2, gridExtra, lmodel2, and sciplot.</p>
+<p><strong>Begin by loading relevant packages. May need to install tidyverse, ggplot2, gridExtra, lmodel2, and sciplot.</strong></p>
 <pre class="r"><code>library(tidyverse)</code></pre>
 <pre><code>## ── Attaching packages ─────────────────────────────────────── tidyverse 1.3.1 ──</code></pre>
 <pre><code>## ✓ ggplot2 3.3.5     ✓ purrr   0.3.4
@@ -189,7 +189,7 @@ pre code {
 <pre class="r"><code>library(dplyr)</code></pre>
 <pre class="r"><code>library(ggplot2)</code></pre>
 <pre class="r"><code>library(sciplot)</code></pre>
-<p>[1] Using the “KamilarAndCooperData.csv” dataset, run a linear regression looking at log(HomeRange_km2) in relation to log(Body_mass_female_mean) and report your β coeffiecients (slope and intercept).</p>
+<p><strong>[1] Using the “KamilarAndCooperData.csv” dataset, run a linear regression looking at log(HomeRange_km2) in relation to log(Body_mass_female_mean) and report your β coeffiecients (slope and intercept).</strong></p>
 <pre class="r"><code>f &lt;- curl(&quot;https://raw.githubusercontent.com/fuzzyatelin/fuzzyatelin.github.io/master/AN588_Fall21/KamilarAndCooperData.csv&quot;)
 c &lt;- read.csv(f, header = TRUE, sep = &quot;,&quot;, stringsAsFactors = FALSE)
 #creates data frame from raw csv file
@@ -265,7 +265,7 @@ lm_coeff &lt;- data.frame(lmbeta0, lmbeta1)
 lm_coeff</code></pre>
 <pre><code>##     lmbeta0  lmbeta1
 ## 1 -9.441231 1.036432</code></pre>
-<p>[2] Then, use bootstrapping to sample from your data 1000 times with replacement, each time fitting the same model and calculating the same coefficients. This generates a sampling distribution for each β coefficient.</p>
+<p><strong>[2] Then, use bootstrapping to sample from your data 1000 times with replacement, each time fitting the same model and calculating the same coefficients. This generates a sampling distribution for each β coefficient.</strong></p>
 <pre class="r"><code>#begin by making containers for the coefficients
 bsb0 &lt;- NULL
 bsb1 &lt;- NULL
@@ -282,7 +282,7 @@ for(i in 1:1000) {
   bsb0 &lt;- c(bsb0, c_bootstrap$coefficients[1])
   bsb1 &lt;- c(bsb1, c_bootstrap$coefficients[2])
 }</code></pre>
-<p>Estimate the standard error for each of your β coefficients as the standard deviation of the sampling distribution from your bootstrap and determine the 95% CI for each of your β coefficients based on the appropriate quantiles from your sampling distribution.</p>
+<p><strong>Estimate the standard error for each of your β coefficients as the standard deviation of the sampling distribution from your bootstrap and determine the 95% CI for each of your β coefficients based on the appropriate quantiles from your sampling distribution.</strong></p>
 <pre class="r"><code>#calculate the mean, standard deviation, and standard error of each bootstrapped coefficient (b0, b1) 
 mean_bsb0 &lt;- mean(bsb0)
 mean_bsb1 &lt;- mean(bsb1)
@@ -304,13 +304,13 @@ bsb0_upper &lt;- mean(bsb0) + qnorm(0.975, mean = 0, sd = 1) * se(bsb0)
 bsb0_lower &lt;- mean(bsb0) + qnorm(0.025, mean = 0, sd = 1) * se(bsb0)  
 ci_bsb0 &lt;- c(bsb0_lower, bsb0_upper)
 ci_bsb0</code></pre>
-<pre><code>## [1] -9.483351 -9.408440</code></pre>
+<pre><code>## [1] -9.499876 -9.424455</code></pre>
 <pre class="r"><code>#CI for b1
 bsb1_upper &lt;- mean(bsb1) + qnorm(0.975, mean = 0, sd = 1) * se(bsb1)
 bsb1_lower &lt;- mean(bsb1) + qnorm(0.025, mean = 0, sd = 1) * se(bsb1)  
 ci_bsb1 &lt;- c(bsb1_lower, bsb1_upper)
 ci_bsb1</code></pre>
-<pre><code>## [1] 1.031693 1.041319</code></pre>
+<pre><code>## [1] 1.033295 1.042948</code></pre>
 <pre class="r"><code>#this separates by lower and upper CI so they can be incorporated into a larger data frame continuing from the previous chunk
 bs_lowerCI &lt;- c(bsb0_lower, bsb1_lower)
 bs_upperCI &lt;- c(bsb0_upper, bsb1_upper)
@@ -318,10 +318,10 @@ bs_upperCI &lt;- c(bsb0_upper, bsb1_upper)
 #organize all values into a data frame for readability
 bs_df &lt;- data.frame(bs_mean, bs_sd, bs_error, bs_lowerCI, bs_upperCI)
 bs_df</code></pre>
-<pre><code>##     bs_mean      bs_sd    se_bsb0     se_bsb1 bs_lowerCI bs_upperCI
-## 1 -9.445895 0.60432370 0.01911039 0.002455908  -9.483351  -9.408440
-## 2  1.036506 0.07766264 0.01911039 0.002455908   1.031693   1.041319</code></pre>
-<p>How does the former compare to the SE estimated from your entire dataset using the formula for standard error implemented in lm()?</p>
+<pre><code>##     bs_mean      bs_sd    se_bsb0    se_bsb1 bs_lowerCI bs_upperCI
+## 1 -9.462166 0.60843837 0.01924051 0.00246265  -9.499876  -9.424455
+## 2  1.038121 0.07787582 0.01924051 0.00246265   1.033295   1.042948</code></pre>
+<p><strong>How does the former compare to the SE estimated from your entire dataset using the formula for standard error implemented in lm()?</strong></p>
 <pre class="r"><code>#linear regression error
 se_lmb0 &lt;- t$SE[1]
 se_lmb1 &lt;- t$SE[2]
@@ -331,10 +331,10 @@ lm_error</code></pre>
 ## 1 0.6729346 0.08487709</code></pre>
 <pre class="r"><code>#bootstrap error
 bs_error</code></pre>
-<pre><code>##      se_bsb0     se_bsb1
-## 1 0.01911039 0.002455908</code></pre>
+<pre><code>##      se_bsb0    se_bsb1
+## 1 0.01924051 0.00246265</code></pre>
 <p>The standard error calculated from the linear regression model is much greater than the standard error calculated using the bootstrapping method.</p>
-<p>How does the latter compare to the 95% CI estimated from your entire dataset?</p>
+<p><strong>How does the latter compare to the 95% CI estimated from your entire dataset?</strong></p>
 <pre class="r"><code>#linear regression CI
 ci_lm &lt;- confint(d, level = 0.90)
 ci_lm</code></pre>
@@ -343,10 +343,11 @@ ci_lm</code></pre>
 ## log(Body_mass_female_mean)   0.8958565  1.177007</code></pre>
 <pre class="r"><code>#boostrap CI
 ci_bsb0</code></pre>
-<pre><code>## [1] -9.483351 -9.408440</code></pre>
+<pre><code>## [1] -9.499876 -9.424455</code></pre>
 <pre class="r"><code>ci_bsb1</code></pre>
-<pre><code>## [1] 1.031693 1.041319</code></pre>
+<pre><code>## [1] 1.033295 1.042948</code></pre>
 <p>The linear regression confidence intervals for b0 and b1 are larger than the bootstrapped confidence intervals, reflecting greater accuracy in the bootstrapped estimates than the linear regression estimates.</p>
+<p><strong>Challenges:</strong> 1. I finally realized that the reason my code hasn’t been knitting up to this point was mostly due to all the packages I had installing at the beginning. I switched to just library and this solved the problem. 2. At first, my samples in the for loop weren’t generating different b0, b1 values, but this was due to drawing data from the wrong source. 3. After this HW, I better understand how to call individual elements of the linear regression summary. 4. It took me a while to figure out how to format my for loop. 5. At first, when I was setting up my data, I omitted all NA values for the whole data set which omitted a lot of values where the two variables I was looking at actually did have data. When I extracted these and then omitted NA, I was left with much more data to work with. I had noticed the very small (n=26) data set, but I didn’t realize the issue until I saw that Victoria had solved the issue in her own code (thanks to her good annotation).</p>
 
 
 
