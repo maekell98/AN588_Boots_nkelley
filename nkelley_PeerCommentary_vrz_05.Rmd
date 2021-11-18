@@ -1,0 +1,125 @@
+---
+title: "nkelley_OriginalHomeworkCode_05"
+output: html_document
+---
+
+<span style="color: red;">you can make a table of contents if youd like to make it easier to navigate your markdown file! the code for that is in the title info of my HW, i copy and paste the same code every week to make a TOC</span>
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r load}
+library(tidyverse)
+library(curl)
+library(dplyr)
+library(ggplot2)
+library(sciplot)
+library(gridExtra)
+library(car)
+library(lmodel2)
+```
+<span style="color: red;">you can just put library() with all the packages in one code chunk, you dont need to include the install.packages function since we all have these packages !! and if someone tried running your code and didnt they would see/know which they needed to install. but yeah you dont need to have them as all separate chunks. also when i tried to knit your code it did not like the install.packages commands and stopped running, so i removed them and condensed to one chunk!!!</span>
+
+[1] Using the “KamilarAndCooperData.csv” dataset, run a linear regression looking at log(HomeRange_km2) in relation to log(Body_mass_female_mean) and report your β
+ coeffiecients (slope and intercept).
+ 
+```{r load data}
+f <- curl("https://raw.githubusercontent.com/fuzzyatelin/fuzzyatelin.github.io/master/AN588_Fall21/KamilarAndCooperData.csv")
+c <- read.csv(f, header = TRUE, sep = ",", stringsAsFactors = FALSE)
+colnames(c) #VZ: cool way to do this.. 
+#creates data frame from raw csv file
+d <- select(c, Body_mass_female_mean, HomeRange_km2)
+d <- na.omit(d)
+summary(d)
+```
+
+```{r linear regression}
+x <- log(d$Body_mass_female_mean)
+y <- log(d$HomeRange_km2)
+m <- lm(x~y, data = d)
+summary(m)
+```
+<span style="color: red;">we have different regression model values because you put lm(x~y)...i believe it is supposed to be lm(y~x, data = d)! frank and I both have y~x and the same #s </span>
+```{r ggplot regression}
+g <- ggplot(data = d, aes(x = x, y = y))
+g <- g + geom_point()
+g <- g + geom_smooth(method = "lm", formula = y ~ x)
+g
+```
+
+```{r beta coefficients}
+t <- coef(summary(m))
+t <- data.frame(unlist(t))
+colnames(t) <- c("Est", "SE", "t", "p")
+t
+
+#beta0 (y-intercept):
+beta0 <- t$Est[1]
+
+#beta1 (slope):
+beta1 <- t$Est[2]
+```
+<span style="color: red;">this is a very clean/smart way to get your beta values! </span>
+
+[2] Then, use bootstrapping to sample from your data 1000 times with replacement, each time fitting the same model and calculating the same coefficients. This generates a sampling distribution for each β coefficient.
+
+```{r bootstrap}
+
+b0 <- NULL
+b1 <- NULL
+for(i in 1:1000) {
+  sample_d = d[sample(1:nrow(d), nrow(d), replace = TRUE), ]
+  
+  d_bootstrap <- lm(log(d$HomeRange_km2) ~ log(d$Body_mass_female_mean), data = sample_d)
+  
+  b0 <- c(b0, d_bootstrap$coefficients[1])
+  
+  b1 <- c(b1, d_bootstrap$coefficients[2])
+}
+b0
+b1
+
+```
+
+**I believe something is going wrong with my sampling, because it's generating the same b0, b1 every time.
+<span style="color: red;">so youre not supposed to print the objects you created from your bootstrap. you should  just go straight into calculating the mean/sd/error for the slope and intercept bootstrap data </span>
+
+Estimate the standard error for each of your β
+ coefficients as the standard deviation of the sampling distribution from your bootstrap and determine the 95% CI for each of your β
+ coefficients based on the appropriate quantiles from your sampling distribution.
+
+```{r standard error}
+mean_b0 <- mean(b0)
+mean_b0
+mean_b1 <- mean(b1)
+mean_b1
+
+sd_b0 <- sd(b0)
+sd_b0
+sd_b1 <- sd(b1)
+sd_b1
+
+se_b0 <- se(b0)
+se_b0
+se_b1 <- se(b1)
+se_b1
+```
+
+```{r 95% CI}
+upper <- mean(b0) + qnorm(0.975, mean = 0, sd = 1) * se(b0)
+lower <- mean(b0) + qnorm(0.025, mean = 0, sd = 1) * se(b0)  
+ci_b0 <- c(lower, upper)
+ci_b0
+
+upper <- mean(b1) + qnorm(0.975, mean = 0, sd = 1) * se(b1)
+lower <- mean(b1) + qnorm(0.025, mean = 0, sd = 1) * se(b1)  
+ci_b1 <- c(lower, upper)
+ci_b1
+```
+How does the former compare to the SE estimated from your entire dataset using the formula for standard error implemented in lm()?
+
+
+
+How does the latter compare to the 95% CI estimated from your entire dataset?
+
+<span style="color: red;">your code is clean and has good bones!  your code knit well after I adjusted the install.package issue.. i think if you  just fix your lm and go straight into mean/sd itll help with your bootstrap data issues! </span>
