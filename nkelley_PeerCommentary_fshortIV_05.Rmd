@@ -1,0 +1,136 @@
+---
+title: "nkelley_OriginalHomeworkCode_05"
+output: html_document
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r load}
+library(tidyverse)
+library(curl)
+library(dplyr)
+```
+```{r loadII}
+library(ggplot2)
+```
+```{r loadIII}
+
+```
+```{r loadIV}
+
+library(sciplot)
+```
+
+<span style="color: red;">I had to remove the install packages pieces as it was making it so that I could not knit the code.</span>
+
+[1] Using the “KamilarAndCooperData.csv” dataset, run a linear regression looking at log(HomeRange_km2) in relation to log(Body_mass_female_mean) and report your β
+ coeffiecients (slope and intercept).
+ 
+```{r load data}
+f <- curl("https://raw.githubusercontent.com/fuzzyatelin/fuzzyatelin.github.io/master/AN588_Fall21/KamilarAndCooperData.csv")
+c <- read.csv(f, header = TRUE, sep = ",", stringsAsFactors = FALSE)
+colnames(c)
+#creates data frame from raw csv file
+d <- select(c, Body_mass_female_mean, HomeRange_km2)
+d <- na.omit(d)
+summary(d)
+```
+
+```{r linear regression}
+x <- log(d$Body_mass_female_mean)
+y <- log(d$HomeRange_km2)
+m <- lm(x~y, data = d)
+summary(m)
+```
+
+<span style="color: red;">I was wondering why I got different coefficients than you, but then I realized you have the regression variables switched! I think we are meant to be doing log(HomeRange_km2) ~ log(Body_mass_female_mean)</span>
+
+```{r ggplot regression}
+g <- ggplot(data = d, aes(x = x, y = y))
+g <- g + geom_point()
+g <- g + geom_smooth(method = "lm", formula = y ~ x)
+g
+```
+
+```{r beta coefficients}
+t <- coef(summary(m))
+t <- data.frame(unlist(t))
+colnames(t) <- c("Est", "SE", "t", "p")
+t
+
+#beta0 (y-intercept):
+beta0 <- t$Est[1]
+
+#beta1 (slope):
+beta1 <- t$Est[2]
+```
+
+<span style="color: red;">I like your code for getting the coefficients! One thing I would say is it might look better to call your code after assigning it a value, such as having "beta0" on its own after giving it its value. For an even fancier display, you can also rbind beta0 and beta1 together to have both values displayed.</span>
+
+[2] Then, use bootstrapping to sample from your data 1000 times with replacement, each time fitting the same model and calculating the same coefficients. This generates a sampling distribution for each β coefficient.
+
+```{r bootstrap}
+
+b0 <- NULL
+b1 <- NULL
+for(i in 1:1000) {
+  sample_d = d[sample(1:nrow(d), nrow(d), replace = TRUE), ]
+  
+  d_bootstrap <- lm(log(d$HomeRange_km2) ~ log(d$Body_mass_female_mean), data = sample_d)
+  
+  b0 <- c(b0, d_bootstrap$coefficients[1])
+  
+  b1 <- c(b1, d_bootstrap$coefficients[2])
+}
+b0
+b1
+
+```
+
+<span style="color: red;">It is strange, because I have very similar code to you and did not have this problem. Is it possible this occurred as a result of the step earlier when you manipulated the data somewhat when you selected it?</span>
+
+**I believe something is going wrong with my sampling, because it's generating the same b0, b1 every time.
+
+Estimate the standard error for each of your β
+ coefficients as the standard deviation of the sampling distribution from your bootstrap and determine the 95% CI for each of your β
+ coefficients based on the appropriate quantiles from your sampling distribution.
+
+```{r standard error}
+mean_b0 <- mean(b0)
+mean_b0
+mean_b1 <- mean(b1)
+mean_b1
+
+sd_b0 <- sd(b0)
+sd_b0
+sd_b1 <- sd(b1)
+sd_b1
+
+se_b0 <- se(b0)
+se_b0
+se_b1 <- se(b1)
+se_b1
+```
+
+```{r 95% CI}
+upper <- mean(b0) + qnorm(0.975, mean = 0, sd = 1) * se(b0)
+lower <- mean(b0) + qnorm(0.025, mean = 0, sd = 1) * se(b0)  
+ci_b0 <- c(lower, upper)
+ci_b0
+
+upper <- mean(b1) + qnorm(0.975, mean = 0, sd = 1) * se(b1)
+lower <- mean(b1) + qnorm(0.025, mean = 0, sd = 1) * se(b1)  
+ci_b1 <- c(lower, upper)
+ci_b1
+```
+<span style="color: red;">Since you are getting the same results over and over, you're not going to get a standard error or and standard deviation. I'm trying to figure out how this error is occuring. Like I said, it would probably be worth going back to the data and keeping it in its same form when called.</span>
+
+
+How does the former compare to the SE estimated from your entire dataset using the formula for standard error implemented in lm()?
+
+
+
+How does the latter compare to the 95% CI estimated from your entire dataset?
+
+**<span style="color: red;">This is a good first attempt! The only issues were the switched variables in the model and the issue with the repeating results in the bootstrapping, but we have very similar code so I think we figured out the same way of approaching this challenge. Good work!</span>**
