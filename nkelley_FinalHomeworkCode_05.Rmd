@@ -147,6 +147,8 @@ ci_bsb1
 ```
 The linear regression confidence intervals for b0 and b1 are larger than the bootstrapped confidence intervals, reflecting greater accuracy in the bootstrapped estimates than the linear regression estimates. 
 
+*Great work! Keep in mind you can also use the boot() function*
+
 **Challenges:**
 1. I finally realized that the reason my code hasn't been knitting up to this point was mostly due to all the packages I had installing at the beginning. I switched to just library and this solved the problem. 
 2. At first, my samples in the for loop weren't generating different b0, b1 values, but this was due to drawing data from the wrong source. 
